@@ -69,9 +69,9 @@ class SerialBroker(BaseBroker):
             yield from device.process_job(self.job, self.env.now)
 
             
-# Parallel Broker
+# Hybrid Broker
 
-class ParallelBroker(BaseBroker):
+class HybridBroker(BaseBroker):
     def __init__(self, env, job, devices, job_records_manager, qcloud, printlog=False):
         super().__init__(env, job, devices, job_records_manager)
         self.qcloud = qcloud

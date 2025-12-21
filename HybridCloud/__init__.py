@@ -1,13 +1,11 @@
 # QCloud/__init__.py
 
-from .broker import SerialBroker, ParallelBroker
-from .qcloud import QCloud
+from .broker import SerialBroker, HybridBroker
 from .dependencies import *
 from .job_generator import JobGenerator
 from .job_records_manager import JobRecordsManager
 from .event_bus import EventBus
 from .qjob import QJob
-from .qcloudsimenv import QCloudSimEnv
 from .topology import *
 from .viz import *
 from .qdevices import (
@@ -16,5 +14,4 @@ QuantumDevice, IBM_guadalupe, IBM_montreal, IBM_tokyo, IBM_rochester, IBM_hummin
 import time
 from .hybridcloudsimenv import HybridCloudSimEnv
 from .hybridcloud import HybridCloud
-from .hybridjob import HybridJob
 from .devices import CPU

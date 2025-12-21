@@ -5,7 +5,7 @@ from HybridCloud.job_generator import JobGenerator
 from HybridCloud.hybridcloud import HybridCloud
 
 class HybridCloudSimEnv(simpy.Environment):
-    def __init__(self, qpu_devices, cpu_devices, broker_class=ParallelBroker, job_feed_method='generator', job_generation_model=None, file_path=None, printlog = False):
+    def __init__(self, qpu_devices, cpu_devices, broker_class=HybridBroker, job_feed_method='generator', job_generation_model=None, file_path=None, printlog = False):
         """
         Initialize the hybrid simulation environment.
 
