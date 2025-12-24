@@ -92,7 +92,7 @@ class JobGenerator:
 
                 delay = job_props["arrival_time"] - (self.env.now if self.env.now > 0 else 0)
                 yield self.env.timeout(max(delay, 0.01))
-
+ 
                 # Create the job
                 job = QJob(
                     job_id=job_props["job_id"],
