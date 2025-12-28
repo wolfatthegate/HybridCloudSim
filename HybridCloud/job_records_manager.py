@@ -29,6 +29,10 @@ class JobRecordsManager:
         else:
             self.job_records[job_id][event_type] = timestamp
 
+    @property
+    def records(self):
+        return self.job_records
+    
     def get_job_records(self):
         """
         Returns all job records.
