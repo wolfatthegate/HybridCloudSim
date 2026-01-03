@@ -5,7 +5,7 @@ from HybridCloud.job_generator import JobGenerator
 from HybridCloud.hybridcloud import HybridCloud
 
 class HybridCloudSimEnv(simpy.Environment):
-    def __init__(self, qpu_devices, cpu_devices, broker_class=HybridBroker, job_feed_method='generator', job_generation_model=None, file_path=None, printlog = False):
+    def __init__(self, qpu_devices, cpu_devices, broker_class=HybridBroker, job_feed_method='generator', job_generation_model=None, file_path=None, printlog = False, cost_config=None):
         """
         Initialize the hybrid simulation environment.
 
@@ -26,7 +26,21 @@ class HybridCloudSimEnv(simpy.Environment):
         self.file_path = file_path
         self.printlog = printlog
         self.event_bus = EventBus()
-        self.job_records_manager = JobRecordsManager(self.event_bus)
+        # -------------------------------
+        # Energy & cost configuration
+        # -------------------------------
+        self.cost_config = cost_config or {
+            "energy": {
+                "electricity_price_per_kwh": 0.15,
+                "default_qpu_power_kw": 50.0,   # superconducting baseline
+                "default_cpu_power_kw": 0.5,
+                "qpu_power_kw": {},             # optional per-QPU override
+                "cpu_power_kw": {},             # optional per-CPU override
+            }
+        }
+        
+        self.job_records_manager = JobRecordsManager(self.event_bus,
+                                            cost_config=self.cost_config)
 
         self.qcloud = HybridCloud(
             env=self,
@@ -39,6 +53,7 @@ class HybridCloudSimEnv(simpy.Environment):
         self._initialize_devices()
         self._initialize_job_generator()
 
+        
     def _initialize_devices(self):
 
         for device in self.qpu_devices + self.cpu_devices:
@@ -68,10 +83,13 @@ class HybridCloudSimEnv(simpy.Environment):
         super().run(until=until if until is not None else None)
         # After run: print a summary of jobs seen vs finished
         try:
-            recs = self.job_records_manager.records  # or however you access them
-            finished = [j for j, r in recs.items() if r.get("cpu_finish") or r.get("qpu_finish")]
-            print(f"Jobs finished: {finished}")
+            recs = self.job_records_manager.get_job_records()  # or however you access them
+            finished = [j for j, r in recs.items() if r.get("cpu_finish")]
+            if self.printlog:
+                print(f"Jobs processed: {finished}")
         except Exception:
+            print(f"no job records found")
             pass
         finally: 
             print(f"{self.now:.2f}: SIMULATION ENDED")
+            print(f"Number of jobs processed: {len(finished)}")

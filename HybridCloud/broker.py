@@ -106,6 +106,11 @@ class HybridBroker(BaseBroker):
         req = getattr(job, "num_qubits", 1)
         return hasattr(device, "number_of_qubits") and device.number_of_qubits >= req
 
+    def _rec(self, job_id):
+        """
+        Shorthand to access a job's record dict safely.
+        """
+        return getattr(self.job_records_manager, "job_records", {}).get(job_id, {})
     
     def _cpu_needs(self, job):
         cpu_units = int(getattr(job, "cpu_units", 8))
@@ -147,48 +152,40 @@ class HybridBroker(BaseBroker):
 
     def _record_phase_metrics(self, job, phase, iter_idx):
         # pull stamps
-        recs = getattr(self.job_records_manager, "records", {})
-        row = recs.get(job.job_id, {})
+        # recs = getattr(self.job_records_manager, "job_records", {})
+        # row = recs.get(job.job_id, {})
+        row = self._rec(job.job_id)
         start_key  = f"{phase}_start"
         finish_key = f"{phase}_finish"
         arrive_key = f"{phase}_arrive"
-
+        
         t_arr = row.get(arrive_key)
         t_s   = row.get(start_key)
         t_f   = row.get(finish_key)
-
+        
         # sanity guard
         if t_arr is None or t_s is None or t_f is None:
             if self.printlog:
                 print(f"{self.env.now:.2f}: WARN: missing stamps for Job {job.job_id} {phase} (arr={t_arr}, start={t_s}, fin={t_f})")
             return
 
-        wait = round(t_s - t_arr, 4)
-        svc  = round(t_f - t_s, 4)
-        turn = round(t_f - t_arr, 4)
+        wait = round(t_s[-1] - t_arr[-1],4) #[round(ts - ta, 4) for ta, ts in zip(t_arr, t_s)]
+        svc  = round(t_f[-1] - t_s[-1],4) #[round(tf - ts, 4) for ts, tf in zip(t_s, t_f)]
+        turn = round(t_f[-1] - t_arr[-1],4) #[round(tf - ta, 4) for ta, tf in zip(t_arr, t_f)]
 
         # store with iteration-aware keys
-        self.job_records_manager.log_job_event(job.job_id, f"{phase}_wait_{iter_idx}", wait)
-        self.job_records_manager.log_job_event(job.job_id, f"{phase}_svc_{iter_idx}", svc)
-        self.job_records_manager.log_job_event(job.job_id, f"{phase}_turn_{iter_idx}", turn)
-
-        print(f"{self.env.now:.2f}: Job {job.job_id} {phase.upper()} metrics (iter {iter_idx}): "
-              f"wait={wait}, svc={svc}, turn={turn}")
-
-    def _rec(self, job_id):
-        """
-        Shorthand to access a job's record dict safely.
-        """
-        return getattr(self.job_records_manager, "records", {}).get(job_id, {})
+        self.job_records_manager.log_job_event(job.job_id, f"{phase}_wait", wait)
+        self.job_records_manager.log_job_event(job.job_id, f"{phase}_svc", svc)
+        self.job_records_manager.log_job_event(job.job_id, f"{phase}_turn", turn)
 
     def run(self):
         job = self.job
-        if not hasattr(job, "iteration"):
-            job.iteration = 0
-        if not hasattr(job, "iterations"):
-            job.iterations = 1
+        if not hasattr(job, "cur_iteration"):
+            job.cur_iteration = 0
+        if not hasattr(job, "req_iterations"):
+            job.req_iterations = 1
 
-        while job.iteration < job.iterations:
+        while job.cur_iteration < job.req_iterations:
             # ---------- QPU phase ----------
             q_needed = self._required_units("QPU", job)
             qpu = None
@@ -213,7 +210,7 @@ class HybridBroker(BaseBroker):
                 print(f"{self.env.now:.2f}: Job {job.job_id} finished processing on qpu")
                 
             self._phase_end(job, "QPU", qpu)
-            self._record_phase_metrics(job, "qpu", job.iteration)
+            self._record_phase_metrics(job, "qpu", job.cur_iteration)
 
             # ---------- CPU phase ----------
             c_needed = self._required_units("CPU", job)   # (cpu_units, mem_bw)
@@ -228,19 +225,29 @@ class HybridBroker(BaseBroker):
             yield from cpu.process_job(job, self.env.now)
             # print(f"{self.env.now:.2f}: Job {job.job_id} back in broker now.")
             self._phase_end(job, "CPU", cpu)
-            self._record_phase_metrics(job, "cpu", job.iteration)
+            self._record_phase_metrics(job, "cpu", job.cur_iteration)
             
-            job.iteration += 1
+            job.cur_iteration += 1
             
             if self.printlog:
-                print(f"{self.env.now:.2f}: Job {job.job_id} ITERATION {job.iteration}/{job.iterations} complete")
+                print(f"{self.env.now:.2f}: Job {job.job_id} ITERATION {job.cur_iteration}/{job.req_iterations} complete")
             
-            if job.iteration >= job.iterations:
+            if job.cur_iteration >= job.req_iterations:
+                
+                # recs = getattr(self.job_records_manager, "job_records", {})
                 row = self._rec(job.job_id)
+                
                 t0 = row.get("arrival", row.get("qpu_arrive"))
                 tf = row.get("cpu_finish")
+                
                 if t0 is not None and tf is not None:
-                    makespan = round(tf - t0, 4)
+                    makespan = round(tf[-1] - t0[0], 4)
+                    
                     self.job_records_manager.log_job_event(job.job_id, "makespan", makespan)
+                    self.job_records_manager.finalize_job_energy_cost(job.job_id)
                     if self.printlog:
                         print(f"{self.env.now:.2f}: Job {job.job_id} MAKESPAN={makespan}")
+                        
+                        
+        # recs = getattr(self.job_records_manager, "job_records", {})
+        # row = recs.get(job.job_id, {})                        

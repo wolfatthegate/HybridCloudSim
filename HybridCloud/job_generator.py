@@ -60,7 +60,7 @@ class JobGenerator:
             for row in reader:
                 
                 arrival_time = self.env.now if row["arrival_time"].strip() == '' else float(row["arrival_time"])
-                iterations = 1 if row["iterations"].strip() == '' else int(row["iterations"])
+                req_iterations = 1 if row["req_iterations"].strip() == '' else int(row["req_iterations"])
                 jobs.append({
                     "job_id": int(row["job_id"]),
                     "num_qubits": int(row["num_qubits"]),
@@ -68,7 +68,7 @@ class JobGenerator:
                     "num_shots": int(row["num_shots"]),
                     "priority": int(row["priority"]),
                     "arrival_time": arrival_time,
-                    "iterations": iterations
+                    "req_iterations": req_iterations
                 })
         return jobs
 
@@ -101,7 +101,7 @@ class JobGenerator:
                     num_shots=job_props["num_shots"],
                     priority=job_props["priority"],
                     arrival_time=job_props["arrival_time"],
-                    iterations = job_props["iterations"]
+                    req_iterations = job_props["req_iterations"]
                 )
                 # Log job arrival
                 self.job_records_manager.log_job_event(job_props["job_id"], 'arrival', round(self.env.now, 2))

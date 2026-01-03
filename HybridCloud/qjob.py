@@ -10,7 +10,7 @@ class QJob:
                  num_shots,
                  priority, 
                  arrival_time,
-                 iterations, 
+                 req_iterations, 
                  circuit_name=None, 
                  gates=None, 
                  expected_exec_time=None, 
@@ -37,7 +37,7 @@ class QJob:
         self.priority = priority
         self.noise_model = noise_model
         self.arrival_time = arrival_time
-        self.iterations = iterations
+        self.req_iterations = req_iterations
         
 
     def __repr__(self):
@@ -53,5 +53,5 @@ class QJob:
                 f"priority={self.priority}, "
                 f"noise_model={self.noise_model}, "
                 f"arrival_time={self.arrival_time:.2f}, "
-                f"iterations={self.iterations}, "
+                f"req_iterations={self.req_iterations}, "
                 f"num_shots={self.num_shots})")
