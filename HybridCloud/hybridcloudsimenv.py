@@ -31,17 +31,47 @@ class HybridCloudSimEnv(simpy.Environment):
         # -------------------------------
         self.cost_config = cost_config or {
             "energy": {
-                "electricity_price_per_kwh": 0.15,
-                "default_qpu_power_kw": 50.0,   # superconducting baseline
-                "default_cpu_power_kw": 0.5,
-                "qpu_power_kw": {},             # optional per-QPU override
-                "cpu_power_kw": {},             # optional per-CPU override
+                # Electricity price ($/kWh)
+                "electricity_price_per_kwh": 0.18,
+
+                # -------------------------
+                # QPU baseline power (kW)
+                # -------------------------
+                # Superconducting QPU often modeled as baseline-power dominated by cryogenics.
+                "default_qpu_power_kw": 80.0,
+                "qpu_power_kw": {},  # optional per-QPU overrides, e.g., {"QPU-1": 90.0}
+
+                # -------------------------
+                # CPU power model (CloudSim-style affine)
+                # -------------------------
+                # P = P_idle + (P_peak - P_idle) * u
+                # u = min(1, cpu_units / capacity_units)
+                "cpu_power_model": "affine",  # "affine" or "constant"
+
+                # Defaults (kW and units)
+                "default_cpu_idle_kw": 0.25,
+                "default_cpu_peak_kw": 0.80,
+                "default_cpu_capacity_units": 16,
+
+                # Optional per-CPU overrides (by device name)
+                "cpu_idle_kw": {},            # e.g., {"CPU-1": 0.25}
+                "cpu_peak_kw": {},            # e.g., {"CPU-1": 0.80}
+                "cpu_capacity_units": {},     # e.g., {"CPU-1": 32}
+
+                # If you ever want constant-power CPU mode:
+                "default_cpu_power_kw": 0.60,
+                "cpu_power_kw": {},           # optional per-CPU overrides for constant mode
             }
         }
         
-        self.job_records_manager = JobRecordsManager(self.event_bus,
-                                            cost_config=self.cost_config)
+        # self.job_records_manager = JobRecordsManager(self.event_bus,
+        #                                     cost_config=self.cost_config)
 
+        self.job_records_manager = JobRecordsManager(
+            self.event_bus,
+            cost_config=self.cost_config
+        )
+        
         self.qcloud = HybridCloud(
             env=self,
             qpu_devices=self.qpu_devices,
@@ -52,6 +82,8 @@ class HybridCloudSimEnv(simpy.Environment):
         self.job_generator = None
         self._initialize_devices()
         self._initialize_job_generator()
+        
+
 
         
     def _initialize_devices(self):
