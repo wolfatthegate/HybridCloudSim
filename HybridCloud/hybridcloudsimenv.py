@@ -111,6 +111,7 @@ class HybridCloudSimEnv(simpy.Environment):
 
     def run(self, until=None):
         self.process(self.job_generator.run())
+        print(f"{len(self.qpu_devices)} QPU(s), {len(self.cpu_devices)} CPU(s)")
         print(f"{self.now:.2f}: SIMULATION STARTED")
         super().run(until=until if until is not None else None)
         # After run: print a summary of jobs seen vs finished

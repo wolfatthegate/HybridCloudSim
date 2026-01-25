@@ -14,4 +14,4 @@ QuantumDevice, IBM_guadalupe, IBM_montreal, IBM_tokyo, IBM_rochester, IBM_hummin
 import time
 from .hybridcloudsimenv import HybridCloudSimEnv
 from .hybridcloud import HybridCloud
-from .devices import CPU
+from .devices import CPU, AMDRyzen

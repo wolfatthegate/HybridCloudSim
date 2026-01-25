@@ -216,7 +216,7 @@ class HybridBroker(BaseBroker):
             c_needed = self._required_units("CPU", job)   # (cpu_units, mem_bw)
             cpu = None
             while cpu is None:
-                cpu = self._pick_device_by_capacity("CPU", c_needed)
+                cpu = self._pick_device_by_capacity("CPU", c_needed)            
                 if cpu is None:
                     yield self.env.timeout(0.5)
 

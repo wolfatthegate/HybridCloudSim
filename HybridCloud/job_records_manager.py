@@ -117,3 +117,31 @@ class JobRecordsManager:
         rec["cost_energy_total"] = round(total_cost, 4)
         rec["qpu_segments"] = qpu_segments
         rec["cpu_segments"] = cpu_segments
+        
+        if self.cost_config.get("debug_energy", False):            
+            # -------------------------
+            # Energy accounting sanity checks
+            # -------------------------
+
+            # ---- CPU checks ----
+            assert rec["energy_cpu_kwh"] >= 0, "CPU energy must be non-negative"
+
+            cpu_seg_energy = sum(seg["energy_kwh"] for seg in rec["cpu_segments"])
+            assert abs(cpu_seg_energy - rec["energy_cpu_kwh"]) < 1e-9, (
+                f"CPU energy mismatch: segments={cpu_seg_energy}, total={rec['energy_cpu_kwh']}"
+            )
+
+            # ---- QPU checks ----
+            assert rec["energy_qpu_kwh"] >= 0, "QPU energy must be non-negative"
+
+            qpu_seg_energy = sum(seg["energy_kwh"] for seg in rec["qpu_segments"])
+            assert abs(qpu_seg_energy - rec["energy_qpu_kwh"]) < 1e-9, (
+                f"QPU energy mismatch: segments={qpu_seg_energy}, total={rec['energy_qpu_kwh']}"
+            )
+
+            # ---- Zero-time consistency ----
+            if rec["qpu_time_s"] == 0:
+                assert rec["energy_qpu_kwh"] == 0, "Zero QPU time but non-zero QPU energy"
+
+            if rec["cpu_time_s"] == 0:
+                assert rec["energy_cpu_kwh"] == 0, "Zero CPU time but non-zero CPU energy"
