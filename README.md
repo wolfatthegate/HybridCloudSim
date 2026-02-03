@@ -1,89 +1,164 @@
-# QCloudSim – Hybrid Quantum–HPC Cloud Simulation Framework
-
-QCloudSim is a Python-based simulation framework for modeling, executing, and analyzing hybrid quantum–HPC workloads.  
-It enables researchers to evaluate **scheduling strategies**, **resource allocation policies**, and **device utilization trends** in environments that combine noisy Quantum Processing Units (QPUs) with classical High-Performance Computing (HPC) resources such as CPUs and GPUs.
-
-The framework supports:
-- **Heterogeneous resources**: QPUs, CPUs, and memory bandwidth modeling.
-- **Hybrid workflows**: Alternating quantum and classical computation stages.
-- **Custom scheduling**: Parallel, sequential, or user-defined scheduling algorithms.
-- **Noise-aware modeling**: Fidelity and noise considerations for realistic QPU behavior.
-- **Detailed logging & visualization**: Gantt charts, utilization time series, and average resource usage.
+# Artifact for HPDC 2026 Submission  
+**Anonymous Submission — Digital-Twin Simulation of Hybrid Quantum–Classical Cloud Systems**
 
 ---
 
-## 📦 Features
+## Overview
 
-- **Configurable Devices**
-  - Built-in presets for quantum devices (e.g., IBM\_Kawasaki, IBM\_Kyiv).
-  - Built-in presets for classical CPUs (e.g., AMD EPYC 9654, NVIDIA Grace Hopper).
-  - Adjustable qubit counts, CPU cores, and memory bandwidth capacities.
+This repository contains the artifact associated with an HPDC 2026 submission describing a digital-twin simulation framework for hybrid quantum–classical cloud environments.
 
-- **Workload Management**
-  - Supports job dispatch from CSV files or generated workloads.
-  - Tracks arrival, start, finish times for each device stage.
-  - Measures per-resource utilization over time.
+The artifact reproduces the core experimental results presented in the paper, including:
 
-- **Visualization Tools**
-  - **Gantt Charts** – visualize execution phases across devices.
-  - **Utilization Time Series** – track CPU, QPU, and memory bandwidth usage.
-  - **Average Utilization Bar Charts** – compare overall resource demands.
+- Hybrid QPU–CPU workflow execution modeling  
+- Resource allocation and contention modeling  
+- Energy and power analysis across heterogeneous devices  
+- Iteration-driven workload scaling behavior  
+
+Two primary experiments are included:
+
+1. `main.ipynb` — Baseline hybrid cloud simulation and energy evaluation  
+2. `Experiment-job-iters.ipynb` — Iteration-scaling experiment analyzing performance and energy trends  
+
+The framework models orchestration-level behavior (not physical quantum simulation) and captures:
+
+- Job arrivals  
+- Workflow iterations  
+- Multi-device resource allocation  
+- Blocking and queuing  
+- Power and energy consumption  
+- Cost modeling  
 
 ---
 
-## 🛠 Installation
+## System Requirements
+
+- Python ≥ 3.10  
+- Recommended: Conda or virtual environment  
+- OS: Linux or macOS (tested), Windows should also work  
+
+---
+
+## Installation
 
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/QCloudSim.git
-cd QCloudSim
+git clone <artifact-repository-url>
+cd <repository>
+```
+Create and activate a virtual environment (recommended):
+```
+python -m venv venv
+source venv/bin/activate
+```
+Install dependencies:
+```
+pip install -r requirements.txt
 ```
 
+⸻
 
-Below is a minimal example of running a hybrid simulation with two QPUs and two CPUs.
+Running the Experiments
 
-```python
+Experiment 1: Baseline Hybrid Simulation
 
-from QCloud import *
+Open ```main.ipynb``` and execute all cells sequentially.
 
-PRINTLOG = False
+Expected outputs:
+- Power time-series plots
+- Energy summaries
+- Per-job energy distributions
+- Cost estimates (if enabled)
 
-# Devices
-ibm_kawasaki = IBM_Kawasaki(env=None, name="QPU-1", printlog=PRINTLOG)
-ibm_kyiv     = IBM_Kyiv(env=None, name="QPU-2", printlog=PRINTLOG)
-cpu1         = CPU("CPU-1", env=None)
-cpu2         = CPU("CPU-2", env=None)
+⸻
 
-# Hybrid environment
-sim_env = HybridCloudSimEnv(
-    qpu_devices=[ibm_kawasaki, ibm_kyiv],
-    cpu_devices=[cpu1, cpu2],
-    broker_class=ParallelBroker,
-    job_feed_method='dispatcher',
-    file_path='synth_job_batches/10-job.csv', 
-    job_generation_model=None, 
-    printlog=PRINTLOG
-)
+Experiment 2: Iteration Scaling Study
 
-# Run the simulation
-sim_env.run()
+Notebook:
 ```
+Experiment-job-iters.ipynb
+```
+This experiment evaluates the impact of increasing workflow iteration counts on:
+- Total simulation time
+- QPU energy consumption
+- CPU energy consumption
+- Variability across runs
 
-Repository Structure
+The iteration set evaluated in the paper is:
+
+{3, 6, 9, 12, 15, 18, 21}
+
+Outputs include:
+- Iterations vs total simulation time
+- Dual-axis QPU/CPU energy plots
+- Variability analysis plots
+- Summary statistics tables
+
+Execute all cells sequentially to reproduce the results.
+
+⸻
+
+Reproducibility Notes
+- Random workload generation uses fixed seeds where specified in the notebooks.
+- Simulation results are deterministic given identical configuration and seed.
+- Runtime depends on workload size; typical execution time on a modern laptop is several minutes.
+
+⸻
+
+Artifact Structure
 ```
-QCloudSim/
-│
-├── QCloud/                 # Core framework package
-│   ├── devices.py          # Device definitions (QPU, CPU, etc.)
-│   ├── dependencies.py     # Presets and constants
-│   ├── __init__.py         # Unified imports
-│   ├── hybridcloudsimenv.py# Hybrid simulation environment
-│   ├── brokers.py          # Scheduling/broker logic
-│   └── utils.py            # Utility functions
-│
-├── synth_job_batches/      # Example job CSV files
-├── Images/                 # Example plots
-├── requirements.txt        # Python dependencies
-└── README.md               # This file
+.
+├── main.ipynb
+├── Experiment-job-iters.ipynb
+├── requirements.txt
+├── data/
+├── figures/
+└── src/
 ```
+- src/ contains simulation core components.
+- data/ stores generated workloads (if persisted).
+- figures/ contains exported plots.
+
+⸻
+
+Configuration
+
+Key parameters that can be modified inside the notebooks:
+- Number of QPUs
+- Number of CPUs
+- QPU baseline power (W)
+- CPU idle/peak power (W)
+- Workload size
+- Iteration counts
+
+Adjusting these parameters enables sensitivity analysis beyond the paper.
+
+⸻
+
+Expected Hardware Resources
+
+The artifact is lightweight and does not require access to real quantum hardware.
+
+Typical resource usage:
+- RAM: < 4 GB
+- CPU: 2–8 cores recommended
+
+⸻
+
+Notes for Artifact Evaluation Committee
+- All experiments are self-contained.
+- No external APIs or cloud access are required.
+- No proprietary datasets are used.
+- All plots are generated directly within the notebooks.
+
+If any issue arises during execution, please ensure:
+- Python version ≥ 3.10
+- All dependencies are installed
+- Notebook cells are executed in order
+
+⸻
+
+License
+
+Released for academic artifact evaluation purposes.
+
