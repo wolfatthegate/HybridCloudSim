@@ -337,7 +337,13 @@ def plot_utilization_over_time(time_points, qpu_util, cpu_util, mem_util):
     # plt.title("Resource Utilization Over Time")
     # plt.ylim(0, 110)
     plt.grid(True, linestyle=":")
-    plt.legend(fontsize=14)
+    plt.legend(
+        bbox_to_anchor=(0.1, 1.0),
+        ncol=3,
+        fontsize=14,
+        frameon=True,
+        fancybox=True,
+        framealpha=1.0)
     plt.tight_layout()
     plt.xticks(fontsize=18)
     plt.yticks(fontsize=18)

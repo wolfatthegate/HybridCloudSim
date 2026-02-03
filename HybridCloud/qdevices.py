@@ -688,7 +688,7 @@ class IBM_Strasbourg(IBM_QuantumDevice):
         
         
         
-class Amazon_dwave(QuantumDevice):
+class Amazon_dwave_8(QuantumDevice):
     """
     The D-Wave QPU is a lattice of interconnected qubits. While some qubits connect to others via couplers, the D-Wave QPU is not fully connected. Instead, the qubits of D-Wave annealing quantum computers interconnect in one of the following topologies:
 
@@ -709,6 +709,11 @@ class Amazon_dwave(QuantumDevice):
                          maintenance_interval = 140, 
                          maintenance_duration = 25, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,
                          printlog=printlog)     
         
         
@@ -733,6 +738,11 @@ class Chimera_dwave_72(QuantumDevice):
                          maintenance_interval = 200, 
                          maintenance_duration = 25, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,
                          printlog=printlog)     
    
   
@@ -757,11 +767,16 @@ class Chimera_dwave_128(QuantumDevice):
                          maintenance_interval = 250, 
                          maintenance_duration = 40, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,
                          printlog=printlog)     
         
         
                
-class Amazon_rigetti(QuantumDevice):
+class Amazon_rigetti_128(QuantumDevice):
     """
     The Rigetti quantum computer is one of the quantum processing units (QPUs) available through Amazon Braket, AWS's quantum computing service. The Rigetti QPUs use superconducting qubits, which are a popular choice for building quantum computers due to their scalability and relatively high coherence times. 
 
@@ -780,11 +795,16 @@ class Amazon_rigetti(QuantumDevice):
                          maintenance_interval = 250, 
                          maintenance_duration = 40, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,                         
                          printlog=printlog)     
         
         
                
-class Google_sycamore(QuantumDevice):
+class Google_sycamore_23(QuantumDevice):
     """
     The Sycamore quantum computer is a quantum processor developed by Google AI Quantum. The Sycamore processor uses superconducting qubits arranged in a two-dimensional grid. Each qubit is connected to four nearest neighbors, which allows for high connectivity and complex interactions needed for quantum computations.
 
@@ -806,6 +826,11 @@ class Google_sycamore(QuantumDevice):
                          maintenance_interval = 150, 
                          maintenance_duration = 20, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,                         
                          printlog=printlog)    
 
 
@@ -832,5 +857,10 @@ class Google_sycamore_53(QuantumDevice):
                          maintenance_interval = 140, 
                          maintenance_duration = 25, 
                          maintenance_switch = False,
+                         clops = None,  # need to assign values
+                         qvol = None, # need to assign values
+                         median_T1 = None,  # need to assign values
+                         median_T2 = None,  # need to assign values
+                         processor_type = None,                         
                          printlog=printlog)    
         
