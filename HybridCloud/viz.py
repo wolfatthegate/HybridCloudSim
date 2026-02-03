@@ -232,7 +232,7 @@ def plot_hybrid_utilization(util):
     vals = [max(0.0, min(100.0, v)) for v in [qpu, cpu, mbw]]
     labels = ["QPU", "CPU units", "Memory\nBandwidth"]
 
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 4))
 
     # pick custom colors & outline
     colors = ["#0496ff", "#f25c54", "#9c27b0"]
