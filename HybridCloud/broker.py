@@ -204,7 +204,7 @@ class HybridBroker(BaseBroker):
       f"{qpu.name} has {qpu.container.level}/{qpu.number_of_qubits} free")
             if self.printlog:               
                 print(f"{self.env.now:.2f}: Job {job.job_id} processing on qpu")
-            yield from qpu.process_job(job, self.env.now)
+                                                                   
             
             if self.printlog:
                 print(f"{self.env.now:.2f}: Job {job.job_id} finished processing on qpu")
@@ -250,4 +250,6 @@ class HybridBroker(BaseBroker):
                         
                         
         # recs = getattr(self.job_records_manager, "job_records", {})
-        # row = recs.get(job.job_id, {})                        
+        # row = recs.get(job.job_id, {})  
+        if job.job_id % 500 == 0: 
+            print(f"{job.job_id} has been processed.")

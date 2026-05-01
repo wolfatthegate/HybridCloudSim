@@ -131,8 +131,7 @@ def calculate_device_usage_units(job_records, sim_env):
 
     qpu_units_time = 0.0
     cpu_units_time = 0.0
-    mem_bw_time    = 0.0
-
+    mem_bw_time    = 0.0  
     for _, rec in job_records.items():
         qs = rec.get('qpu_start', []) or []
         qf = rec.get('qpu_finish', []) or []
@@ -338,7 +337,8 @@ def plot_utilization_over_time(time_points, qpu_util, cpu_util, mem_util):
     # plt.ylim(0, 110)
     plt.grid(True, linestyle=":")
     plt.legend(
-        bbox_to_anchor=(0.1, 1.0),
+        loc='upper center',
+        bbox_to_anchor=(0.5, 1.15),
         ncol=3,
         fontsize=14,
         frameon=True,
