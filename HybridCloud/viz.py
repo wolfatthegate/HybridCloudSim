@@ -117,14 +117,13 @@ def print_phase_metrics(job_records, DISPLAY):
 def plot_all(job_records, display):
     print_phase_metrics(job_records, DISPLAY = display)
     plot_gantt(job_records, DISPLAY = display)
-    
-def calculate_device_usage_units(job_records, sim_env):
 
+def calculate_device_usage_units(job_records, sim_env):
     T = sim_env.now
     if T <= 0:
         raise ValueError("Simulation time is zero.")
 
-    # Capacities
+    # 1. Gather Total Global Capacities
     qpu_units_cap = sum(getattr(d, "container", None).capacity for d in getattr(sim_env, "qpu_devices", []) if getattr(d, "container", None))
     cpu_units_cap = sum(getattr(d, "container", None).capacity for d in getattr(sim_env, "cpu_devices", []) if getattr(d, "container", None))
     mem_bw_cap    = sum(getattr(d, "mem_bw",    None).capacity for d in getattr(sim_env, "cpu_devices", []) if getattr(d, "mem_bw", None))
@@ -132,37 +131,45 @@ def calculate_device_usage_units(job_records, sim_env):
     qpu_units_time = 0.0
     cpu_units_time = 0.0
     mem_bw_time    = 0.0  
+
+    # 2. Parse Overlapping Time-Slices per Job Record
     for _, rec in job_records.items():
+        # Extracted metrics arrays (Each has a size of 4 based on your JSON format)
         qs = rec.get('qpu_start', []) or []
         qf = rec.get('qpu_finish', []) or []
-        qu = rec.get('qpu_units', []) or []  # if you logged it; otherwise assume 1
+        qu = rec.get('qpu_units', []) or []
 
         cs = rec.get('cpu_start', []) or []
         cf = rec.get('cpu_finish', []) or []
         cu = rec.get('cpu_units', []) or []
         mb = rec.get('cpu_mem_bw', []) or []
 
+        # Safely capture the exact length of logged loops
         n_q = min(len(qs), len(qf), len(qu)) if qu else min(len(qs), len(qf))
         n_c = min(len(cs), len(cf), len(cu), len(mb)) if (cu and mb) else min(len(cs), len(cf))
 
-        # QPU: treat each phase weight by qubits (if available) else 1
+        # Accumulate QPU metrics across intervals
         for i in range(n_q):
             s, f = qs[i], qf[i]
-            units = (qu[i] if qu else 1)
+            allocated_units = qu[i] if i < len(qu) else 1
             if s is not None and f is not None and f >= s:
-                qpu_units_time += (f - s) * units
+                actual_f = min(f, T)
+                if actual_f >= s:
+                    qpu_units_time += (actual_f - s) * allocated_units
 
-        # CPU: accumulate BOTH CPU-units*time and mem-bw*time
+        # Accumulate CPU & Memory Bandwidth metrics across intervals
         for i in range(n_c):
             s, f = cs[i], cf[i]
-            cpu_units = (cu[i] if cu else 1)
-            mem_units = (mb[i] if mb else 1)
+            allocated_cpu = cu[i] if i < len(cu) else 1
+            allocated_mb  = mb[i] if i < len(mb) else 1
             if s is not None and f is not None and f >= s:
-                dt = (f - s)
-                cpu_units_time += dt * cpu_units
-                mem_bw_time    += dt * mem_units
+                actual_f = min(f, T)
+                if actual_f >= s:
+                    dt = (actual_f - s)
+                    cpu_units_time += dt * allocated_cpu
+                    mem_bw_time    += dt * allocated_mb
 
-    # Denominators
+    # 3. Compute Denominators
     qpu_den = max(1e-12, qpu_units_cap * T) if qpu_units_cap else 1e-12
     cpu_den = max(1e-12, cpu_units_cap * T) if cpu_units_cap else 1e-12
     mbw_den = max(1e-12, mem_bw_cap    * T) if mem_bw_cap    else 1e-12
@@ -179,6 +186,68 @@ def calculate_device_usage_units(job_records, sim_env):
         "cpu_units_capacity": cpu_units_cap,
         "mem_bw_capacity": mem_bw_cap,
     }
+    
+# def calculate_device_usage_units(job_records, sim_env):
+
+#     T = sim_env.now
+#     if T <= 0:
+#         raise ValueError("Simulation time is zero.")
+
+#     # Capacities
+#     qpu_units_cap = sum(getattr(d, "container", None).capacity for d in getattr(sim_env, "qpu_devices", []) if getattr(d, "container", None))
+#     cpu_units_cap = sum(getattr(d, "container", None).capacity for d in getattr(sim_env, "cpu_devices", []) if getattr(d, "container", None))
+#     mem_bw_cap    = sum(getattr(d, "mem_bw",    None).capacity for d in getattr(sim_env, "cpu_devices", []) if getattr(d, "mem_bw", None))
+
+#     qpu_units_time = 0.0
+#     cpu_units_time = 0.0
+#     mem_bw_time    = 0.0  
+#     for _, rec in job_records.items():
+#         qs = rec.get('qpu_start', []) or []
+#         qf = rec.get('qpu_finish', []) or []
+#         qu = rec.get('qpu_units', []) or []  # if you logged it; otherwise assume 1
+
+#         cs = rec.get('cpu_start', []) or []
+#         cf = rec.get('cpu_finish', []) or []
+#         cu = rec.get('cpu_units', []) or []
+#         mb = rec.get('cpu_mem_bw', []) or []
+
+#         n_q = min(len(qs), len(qf), len(qu)) if qu else min(len(qs), len(qf))
+#         n_c = min(len(cs), len(cf), len(cu), len(mb)) if (cu and mb) else min(len(cs), len(cf))
+
+#         # QPU: treat each phase weight by qubits (if available) else 1
+#         for i in range(n_q):
+#             s, f = qs[i], qf[i]
+#             units = (qu[i] if qu else 1)
+#             if s is not None and f is not None and f >= s:
+#                 qpu_units_time += (f - s) * units
+
+#         # CPU: accumulate BOTH CPU-units*time and mem-bw*time
+#         for i in range(n_c):
+#             s, f = cs[i], cf[i]
+#             cpu_units = (cu[i] if cu else 1)
+#             mem_units = (mb[i] if mb else 1)
+#             if s is not None and f is not None and f >= s:
+#                 dt = (f - s)
+#                 cpu_units_time += dt * cpu_units
+#                 mem_bw_time    += dt * mem_units
+
+#     # Denominators
+#     qpu_den = max(1e-12, qpu_units_cap * T) if qpu_units_cap else 1e-12
+#     cpu_den = max(1e-12, cpu_units_cap * T) if cpu_units_cap else 1e-12
+#     mbw_den = max(1e-12, mem_bw_cap    * T) if mem_bw_cap    else 1e-12
+
+#     return {
+#         "time": round(T, 2),
+#         "qpu_util_percent": round(100.0 * qpu_units_time / qpu_den, 2) if qpu_units_cap else 0.0,
+#         "cpu_util_percent": round(100.0 * cpu_units_time / cpu_den, 2) if cpu_units_cap else 0.0,
+#         "mem_bw_util_percent": round(100.0 * mem_bw_time / mbw_den, 2) if mem_bw_cap else 0.0,
+#         "qpu_units_time": round(qpu_units_time, 2),
+#         "cpu_units_time": round(cpu_units_time, 2),
+#         "mem_bw_time": round(mem_bw_time, 2),
+#         "qpu_units_capacity": qpu_units_cap,
+#         "cpu_units_capacity": cpu_units_cap,
+#         "mem_bw_capacity": mem_bw_cap,
+#     }
 
 def plot_cpu_resource_util(util):
     labels = ["CPU units", "Memory BW"]

@@ -204,7 +204,7 @@ class HybridBroker(BaseBroker):
       f"{qpu.name} has {qpu.container.level}/{qpu.number_of_qubits} free")
             if self.printlog:               
                 print(f"{self.env.now:.2f}: Job {job.job_id} processing on qpu")
-                                                                   
+            yield from qpu.process_job(job, self.env.now)                                                       
             
             if self.printlog:
                 print(f"{self.env.now:.2f}: Job {job.job_id} finished processing on qpu")

@@ -270,12 +270,12 @@ class IBM_QuantumDevice(QuantumDevice):
         """
         Calculate processing time considering IBM-specific metrics.
         """
-        M = 100
-        K = 10
+        M = 1
+        K = 1
         S = job.num_shots
-        D = math.log2(self.qvol)
-
-        return  M * K * S * D / self.clops / 60
+        D = math.log2(job.depth)
+        scaling_factor = 600
+        return  scaling_factor * (M * K * S * D / self.clops / 60)
     
     def extract_errors_from_csv(self):
         """

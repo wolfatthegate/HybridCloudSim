@@ -8,6 +8,7 @@ from .event_bus import EventBus
 from .qjob import QJob
 from .topology import *
 from .viz import *
+from .cloud_monitor import CloudMonitor
 from .qdevices import (
 QuantumDevice, IBM_guadalupe, IBM_montreal, IBM_tokyo, IBM_rochester, IBM_hummingbird, Amazon_dwave_8, Chimera_dwave_72, Chimera_dwave_128, Amazon_rigetti_128, Google_sycamore_23, Google_sycamore_53, IBM_Fez, IBM_Torino, IBM_Kyiv, IBM_Sherbrooke, IBM_Brussels, IBM_Kawasaki, IBM_Rensselaer, IBM_Quebec, IBM_Brisbane, IBM_Marrakesh, IBM_Strasbourg)
 

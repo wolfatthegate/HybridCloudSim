@@ -71,20 +71,21 @@ class HybridCloudSimEnv(simpy.Environment):
             self.event_bus,
             cost_config=self.cost_config
         )
+
+        self.cloud_monitor = CloudMonitor(sim_env = self)
         
         self.qcloud = HybridCloud(
             env=self,
             qpu_devices=self.qpu_devices,
             cpu_devices=self.cpu_devices,
-            job_records_manager=self.job_records_manager
+            cloud_monitor = self.cloud_monitor, 
+            job_records_manager=self.job_records_manager,            
+            printlog = self.printlog
         )
 
         self.job_generator = None
         self._initialize_devices()
         self._initialize_job_generator()
-        
-
-
         
     def _initialize_devices(self):
 
@@ -108,15 +109,18 @@ class HybridCloudSimEnv(simpy.Environment):
             file_path=self.file_path,
             printlog=self.printlog
         )
-
     def run(self, until=None):
         self.process(self.job_generator.run())
         print(f"{len(self.qpu_devices)} QPU(s), {len(self.cpu_devices)} CPU(s)")
         print(f"{self.now:.2f}: SIMULATION STARTED")
         super().run(until=until if until is not None else None)
+        
+        # Initialize an empty list for safety across try/except scopes
+        finished = []
+        
         # After run: print a summary of jobs seen vs finished
         try:
-            recs = self.job_records_manager.get_job_records()  # or however you access them
+            recs = self.job_records_manager.get_job_records()  
             finished = [j for j, r in recs.items() if r.get("cpu_finish")]
             if self.printlog:
                 print(f"Jobs processed: {finished}")
@@ -126,3 +130,47 @@ class HybridCloudSimEnv(simpy.Environment):
         finally: 
             print(f"{self.now:.2f}: SIMULATION ENDED")
             print(f"Number of jobs processed: {len(finished)}")
+            
+            # ===========================================================
+            # FINAL QUANTUM CLOUD UTILIZATION SUMMARY
+            # ===========================================================
+            history = getattr(self.cloud_monitor, "utilization_history", [])
+            if history:
+                final_snapshot = history[-1]
+                print("\n" + "="*60)
+                print("                 FINAL QUANTUM CLOUD SUMMARY                ")
+                print("="*60)
+                print(f"Total Operational Lifetime : {self.now:.2f} seconds")
+                print(f"Global Cumulative QPU Util : {final_snapshot['global_qpu_util_percent']}%")
+                print(f"Global Cumulative CPU Util : {final_snapshot['global_cpu_util_percent']}%")
+                print(f"Global Cumulative Mem Util : {final_snapshot['global_mem_bw_util_percent']}%")
+                print("-"*60)
+                print("Individual Device Endstates:")
+                for name, status in final_snapshot.get('qpu_devices', {}).items():
+                    print(f"  > {name}: Capacity={status['capacity']} | Active Load={status['current_usage']}")
+                for name, status in final_snapshot.get('cpu_devices', {}).items():
+                    print(f"  > {name}: Capacity={status['capacity']} | Active Load={status['current_usage']}")
+                print("="*60 + "\n")
+            else:
+                print("\n[!] No cloud monitor snapshots were recorded during this run.\n")
+    # Old run function without cloud monitor. 
+
+    # def run(self, until=None):
+    #     self.process(self.job_generator.run())
+    #     print(f"{len(self.qpu_devices)} QPU(s), {len(self.cpu_devices)} CPU(s)")
+    #     print(f"{self.now:.2f}: SIMULATION STARTED")
+    #     super().run(until=until if until is not None else None)
+    #     # After run: print a summary of jobs seen vs finished
+    #     try:
+    #         recs = self.job_records_manager.get_job_records()  # or however you access them
+    #         finished = [j for j, r in recs.items() if r.get("cpu_finish")]
+    #         if self.printlog:
+    #             print(f"Jobs processed: {finished}")
+    #     except Exception:
+    #         print(f"no job records found")
+    #         pass
+    #     finally: 
+    #         print(f"{self.now:.2f}: SIMULATION ENDED")
+    #         print(f"Number of jobs processed: {len(finished)}")
+
+    

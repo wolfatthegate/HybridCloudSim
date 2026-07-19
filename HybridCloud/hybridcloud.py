@@ -1,12 +1,13 @@
 # hybridcloud.py
 
 class HybridCloud:
-    def __init__(self, env, qpu_devices, cpu_devices, job_records_manager=None, printlog=True):
+    def __init__(self, env, qpu_devices, cpu_devices, cloud_monitor, job_records_manager=None, printlog=True):
         self.env = env
         self.qpus = qpu_devices
         self.cpus = cpu_devices
         self.job_records = {}  # Dictionary to track job lifecycle events
         self.job_records_manager = job_records_manager
+        self.cloud_monitor = cloud_monitor
 
     def log_job_event(self, job_id, event_type, timestamp):
         """
