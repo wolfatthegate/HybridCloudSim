@@ -59,8 +59,17 @@ It is convenient to summarize the offered load by the dimensionless ratio
   \rho(k) \;=\; \frac{\lambda \, s_1 \, k}{C},
   \label{eq:rho}
 \end{equation}
-where $s_1 = \qty{0.97}{\second}$ is the uncontended QPU service time of a
-single iteration, measured at the smallest sweep point. Equation~\eqref{eq:rho}
+where $s_1 = \qty{0.9706}{\second}$ is the uncontended QPU service time of a
+single iteration. This constant is not fitted. The device service model is
+closed-form in shot count $S$ and circuit depth $D$,
+$T_{\mathrm{iter}} = 600\,S\log_2 D / (60\,\mathrm{CLOPS})$, and is independent
+of both qubit count and $k$; with identical CLOPS on the two devices it takes
+the same deterministic value on every run in the sweep. Its batch mean,
+standard deviation, and $95$th percentile ($0.9706$, $0.4072$, and
+\qty{1.6364}{\second}) reproduce the $k=3$ measurements to four decimal places,
+confirming that the shortest configuration executes with no blocking whatever
+and that $s_1$ is an exact, not an approximate, reference.
+Equation~\eqref{eq:rho}
 is the fraction of nominal fleet concurrency that the workload demands; it rises
 from $\rho = 0.18$ at $k=3$ to $\rho = 1.27$ at $k=21$.
 
@@ -285,11 +294,19 @@ time rather than accounted separately, which is why
 Figure~\ref{fig:iteration-knee}(a) is labeled ``service $+$ blocking.'' This
 does not affect any total --- turnaround, energy, and cost are all correct,
 since a job blocked while holding qubits genuinely occupies and powers the
-device --- but it means the present data cannot decompose the $41\times$
-inflation into contention for qubits versus fragmentation of the coupling
-graph. Separating the two requires instrumenting the admission retry loop, and
-would sharpen the mechanism argument of Section~\ref{sec:iter-results} from
-inference to measurement.
+device --- and it does not obscure the split between the two, because service
+time is deterministic and known: mean blocking per job is exactly
+$\bar{T}_{\mathrm{QPU}} - s_1 k$. Blocking accounts for $0.0\%$, $4.0\%$, and
+$31.3\%$ of quantum phase time at $k=3$, $9$, and $12$, and for $87.2\%$,
+$96.3\%$, and $97.5\%$ at $k=15$, $18$, and $21$. At the largest configuration,
+in other words, $97.5\%$ of the time a job spends in its quantum phase --- and
+therefore $97.5\%$ of the \qty{45477}{\kilo\watt\hour} the fleet draws --- is
+spent waiting rather than computing. What the present instrumentation cannot do
+is decompose that blocking further, into contention for aggregate qubit
+capacity versus fragmentation of the coupling graph; separating those two
+requires recording the outcome of each admission retry, and would sharpen the
+mechanism argument of Section~\ref{sec:iter-results} from inference to
+measurement.
 
 Third, the exponent estimates in the overloaded regime ($\rho > 1$, i.e.
 $k \geq 18$) should be read qualitatively. Once offered concurrency exceeds
